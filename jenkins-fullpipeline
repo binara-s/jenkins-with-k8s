@@ -1,0 +1,84 @@
+pipeline {
+    agent {
+        kubernetes {
+            cloud 'inbay-dev'
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              labels:
+                app: my-agent
+            spec:
+              containers:
+              - name: busybox
+                image: busybox
+                tty: true
+              - name: maven
+                image: maven:alpine
+                command:
+                 - cat
+                tty: true
+              - name: docker
+                image: docker:19.03.14-dind
+                privileged: true
+                command:
+                 - cat
+                tty: true
+                volumeMounts:
+                 - mountPath: /var/run
+                   name: docker-sock
+              volumes:
+              - name: docker-sock 
+                hostPath:
+                  path: /var/run
+            """
+        }
+    }
+    triggers {
+        pollSCM('* * * * *')
+    }
+    stages {
+        stage('Checking') {
+            steps {
+                git branch: 'master',
+                url: 'https://github.com/randeer/jenkins-tomcat-lab.git'
+            }
+        }
+        stage('Build App') {
+            steps {
+                container('maven') {
+                    sh 'echo from Maven >> rashmika.txt'
+                    sh 'mvn -f java-tomcat-sample/pom.xml clean package'
+                    sh 'echo done........'
+                }
+            }
+        }
+        stage('Archive Artifacts') {
+            steps {
+                echo "Now Archiving the Artifacts...."
+                archiveArtifacts artifacts: '**/*.war'
+            }
+        }
+        stage('Create Docker Image') {
+            steps {
+                container('docker') {
+                    sh 'pwd'
+                    sh 'cp java-tomcat-sample/target/java-tomcat-maven-example.war ROOT.war'
+                    sh 'docker build -t randeerdil/cv_template:$BUILD_NUMBER .'
+                    sh 'ls -l'
+                    sh 'echo No errors..............'
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+               container('docker') {
+                   sh 'echo Pushing Image.........'
+                   sh 'docker push randeerdil/cv_template:$BUILD_NUMBER'
+                   sh 'docker rm image randeerdil/cv_template:$BUILD_NUMBER'
+                   sh 'echo Task is completed'
+               } 
+            }
+        }
+    }
+}
