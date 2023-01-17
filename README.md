@@ -26,25 +26,31 @@ Kubernetes is a powerful tool for managing containerized applications, and it ca
 
 ```groovy
 pipeline {
-    agent {
-        kubernetes {
-          podTemplate {
-            label 'my-agent'
-            containerTemplate {
-              name 'jnlp'
-              image 'jenkins/jnlp-slave:latest'
-              args '-url http://jenkins:8080/jenkins/ -workDir /home/jenkins'
-            }
-          }
-        }
+  agent {
+    kubernetes {
+      cloud 'inbay-dev'
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: busybox
+            image: busybox
+            tty: true
+
+        '''
     }
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building...'
-            }
+  }
+  stages {
+    stage('Run busybox') {
+      steps {
+        container('busybox') {
+          sh 'echo Hello World > hello.txt'
+          sh 'ls -last'
         }
+      }
     }
+  }
 }
 ```
 
