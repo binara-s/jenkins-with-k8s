@@ -26,31 +26,58 @@ Kubernetes is a powerful tool for managing containerized applications, and it ca
 
 ```groovy
 pipeline {
-  agent {
-    kubernetes {
-      cloud 'inbay-dev'
-      yaml '''
-        apiVersion: v1
-        kind: Pod
-        spec:
-          containers:
-          - name: busybox
-            image: busybox
-            tty: true
+    agent {
+        kubernetes {
+            cloud 'inbay-dev'
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              labels:
+                app: my-agent
+            spec:
+              containers:
+              - name: busybox
+                image: busybox
+                tty: true
+              - name: maven
+                image: maven:alpine
+                command:
+                 - cat
+                tty: true
 
-        '''
-    }
-  }
-  stages {
-    stage('Run busybox') {
-      steps {
-        container('busybox') {
-          sh 'echo Hello World > hello.txt'
-          sh 'ls -last'
+            """
         }
-      }
     }
-  }
+    triggers {
+        pollSCM('* * * * *')
+    }
+    stages {
+        stage('Checking') {
+            steps {
+                git branch: 'master',
+                url: 'https://github.com/randeer/jenkins-tomcat-lab.git'
+            }
+        }
+        stage('Build App') {
+            steps {
+                container('maven') {
+                    sh 'echo from Maven >> rashmika.txt'
+                    sh 'mvn -f java-tomcat-sample/pom.xml clean package'
+                    sh 'echo done........'
+                }
+            }
+        }
+        stage('Last Test') {
+            steps {
+                container('busybox') {
+                    sh 'echo Rashmika Manawadu >> rashmika.txt'
+                    sh 'cat rashmika.txt'
+                    sh 'ls -l'
+                }
+            }
+        }
+    }
 }
 ```
 
