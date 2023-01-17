@@ -77,7 +77,7 @@ pipeline {
         stage('Last Test') {
           steps {
             container('busybox') {
-                sh 'echo Rashmika Manawadu >> rashmika.txt'
+                    sh 'echo Rashmika Manawadu >> rashmika.txt'
                     sh 'cat rashmika.txt'
                     sh 'ls -l'
                 }
