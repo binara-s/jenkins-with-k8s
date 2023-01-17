@@ -68,10 +68,16 @@ pipeline {
                 }
             }
         }
-        stage('Last Test') {
+        stage('Archive Artifacts') {
             steps {
-                container('busybox') {
-                    sh 'echo Rashmika Manawadu >> rashmika.txt'
+                echo "Now Archiving the Artifacts...."
+                archiveArtifacts artifacts: 'java-tomcat-sample/target/*.war'
+            }
+        }
+        stage('Last Test') {
+          steps {
+            container('busybox') {
+                sh 'echo Rashmika Manawadu >> rashmika.txt'
                     sh 'cat rashmika.txt'
                     sh 'ls -l'
                 }
