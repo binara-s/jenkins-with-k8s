@@ -45,7 +45,19 @@ pipeline {
                 command:
                  - cat
                 tty: true
-
+              - name: docker
+                image: docker:19.03.14-dind
+                privileged: true
+                command:
+                 - cat
+                tty: true
+                volumeMounts:
+                 - mountPath: /var/run
+                   name: docker-sock
+              volumes:
+              - name: docker-sock 
+                hostPath:
+                  path: /var/run
             """
         }
     }
@@ -71,16 +83,27 @@ pipeline {
         stage('Archive Artifacts') {
             steps {
                 echo "Now Archiving the Artifacts...."
-                archiveArtifacts artifacts: 'java-tomcat-sample/target/*.war'
+                archiveArtifacts artifacts: '**/*.war'
             }
         }
-        stage('Last Test') {
-          steps {
-            container('busybox') {
-                    sh 'echo Rashmika Manawadu >> rashmika.txt'
-                    sh 'cat rashmika.txt'
+        stage('Create Docker Image') {
+            steps {
+                container('docker') {
+                    sh 'pwd'
+                    sh 'cp java-tomcat-sample/target/java-tomcat-maven-example.war ROOT.war'
+                    sh 'docker build -t 20.1.190.133:5000/cv_template:$BUILD_NUMBER .'
                     sh 'ls -l'
+                    sh 'echo No errors..............'
                 }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+               container('docker') {
+                   sh 'echo Pushing Image.........'
+                   sh 'docker push 20.1.190.133:5000/cv_template:$BUILD_NUMBER'
+                   sh 'echo Task is completed'
+               } 
             }
         }
     }
