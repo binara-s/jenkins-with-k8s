@@ -50,7 +50,7 @@ pipeline {
         stage('Build App') {
             steps {
                 container('maven') {
-                    sh 'echo from Maven >> rashmika.txt'
+                    sh 'echo from Maven......'
                     sh 'mvn -f java-tomcat-sample/pom.xml clean package'
                     sh 'echo done........'
                 }
@@ -65,10 +65,9 @@ pipeline {
         stage('Create Docker Image') {
             steps {
                 container('docker') {
-                    sh 'pwd'
+                    sh 'echo Building Docker Image.........'
                     sh 'cp java-tomcat-sample/target/java-tomcat-maven-example.war ROOT.war'
                     sh 'docker build -t 20.1.190.133:5000/cv_template:$BUILD_NUMBER .'
-                    sh 'ls -l'
                     sh 'echo No errors..............'
                 }
             }
