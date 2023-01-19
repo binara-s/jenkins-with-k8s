@@ -26,6 +26,9 @@ Kubernetes is a powerful tool for managing containerized applications, and it ca
 
 ```groovy
 pipeline {
+    environment {
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
     agent {
         kubernetes {
             cloud 'inbay-dev'
@@ -106,8 +109,23 @@ pipeline {
                } 
             }
         }
+        stage('Deploy to K8S') {
+            steps {
+                input message: 'Do you want to deploy the application to Kubernetes?'
+                kubernetesDeploy(
+                    kubeconfigId: 'azure-prod-config',
+                    configs: 'my-registry.yaml',
+                    enableConfigSubstitution: true
+                    )
+                container('busybox') {
+                    sh 'echo IMAGE_TAG = $IMAGE_TAG'
+                    sh 'echo Done.................'
+                }
+            }
+        }
     }
 }
+
 ```
 
 
