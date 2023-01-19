@@ -77,7 +77,7 @@ pipeline {
         stage('Build App') {
             steps {
                 container('maven') {
-                    sh 'echo from Maven >> rashmika.txt'
+                    sh 'echo from Maven........'
                     sh 'mvn -f java-tomcat-sample/pom.xml clean package'
                     sh 'echo done........'
                 }
