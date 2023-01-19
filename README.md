@@ -92,10 +92,9 @@ pipeline {
         stage('Create Docker Image') {
             steps {
                 container('docker') {
-                    sh 'pwd'
+                    sh 'echo Creating Docker Image.................'
                     sh 'cp java-tomcat-sample/target/java-tomcat-maven-example.war ROOT.war'
                     sh 'docker build -t 20.1.190.133:5000/cv_template:$BUILD_NUMBER .'
-                    sh 'ls -l'
                     sh 'echo No errors..............'
                 }
             }
